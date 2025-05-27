@@ -1,0 +1,62 @@
+{
+  "name": "react-typescript",
+  "version": "1.0.0",
+  "description": "React and TypeScript example starter project",
+  "keywords": [
+    "typescript",
+    "react",
+    "starter"
+  ],
+  "main": "src/index.tsx",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "file-saver": "^2.0.5",
+    "firebase": "^11.6.1",
+    "fuzzball": "^2.2.2",
+    "loader-utils": "3.2.1",
+    "lucide-react": "^0.511.0",
+    "mammoth": "^1.9.0",
+    "openai": "^4.96.0",
+    "pdfjs-dist": "^5.1.91",
+    "postcss": "^8.5.3",
+    "postcss-preset-env": "^10.1.5",
+    "process": "^0.11.10",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-firebase-hooks": "^5.1.1",
+    "react-pdf": "^9.2.1",
+    "react-router-dom": "^7.6.0",
+    "react-scripts": "5.0.1",
+    "react-textarea-autosize": "^8.5.9",
+    "react-toastify": "^11.0.5",
+    "react-tooltip": "^5.28.1",
+    "serve": "^14.2.4",
+    "tailwindcss": "^4.1.4",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/react": "18.2.38",
+    "@types/react-dom": "18.2.15",
+    "postcss-loader": "^8.1.1",
+    "ts-loader": "^9.5.2",
+    "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.5",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
