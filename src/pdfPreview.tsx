@@ -10,7 +10,7 @@ const PdfViewer = ({
   currentPage,
   setNumPages,
 }: {
-  file: string;
+  file: string | File | Blob;
   currentPage: number;
   setNumPages: (n: number) => void;
 }) => {
@@ -40,16 +40,19 @@ const PdfViewer = ({
       defaultViewport: viewport,
       eventBus,
       annotationMode: 1,
-      textLayerMode: 0,  
+      textLayerMode: 0,
     });
 
     pdfPageView.setPdfPage(page);
     await pdfPageView.draw();
-  }
-  // Caricamento iniziale
+  };
+
+  // Caricamento iniziale e ogni volta che cambia file
   useEffect(() => {
     const loadPdf = async () => {
       if (!file || !containerRef.current) return;
+
+      console.log('Caricamento PDF da:', file);
 
       containerRef.current.innerHTML = '';
 
@@ -64,7 +67,19 @@ const PdfViewer = ({
       }
 
       try {
-        const loadingTask = pdfjsLib.getDocument(file);
+        let loadingTask;
+
+        if (typeof file === 'string') {
+          // file è un URL
+          loadingTask = pdfjsLib.getDocument(file);
+        } else if (file instanceof Blob) {
+          // file è Blob o File
+          const arrayBuffer = await file.arrayBuffer();
+          loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+        } else {
+          throw new Error('Tipo file non supportato');
+        }
+
         loadingTaskRef.current = loadingTask;
 
         const pdfDoc = await loadingTask.promise;
@@ -73,7 +88,11 @@ const PdfViewer = ({
 
         renderPage(currentPage, scale);
       } catch (err: any) {
-        console.error('Errore durante il caricamento del PDF:', err);
+        if (err instanceof Error) {
+          console.error('Errore durante il caricamento del PDF:', err.message, err);
+        } else {
+          console.error('Errore durante il caricamento del PDF:', err);
+        }
       }
     };
 
@@ -108,7 +127,6 @@ const PdfViewer = ({
       startY = e.pageY;
       scrollLeft = container.scrollLeft;
       scrollTop = container.scrollTop;
-      //container.classList.add('dragging');
       container.style.cursor = 'grabbing';
     };
 
@@ -123,7 +141,6 @@ const PdfViewer = ({
 
     const endDrag = () => {
       isDragging = false;
-      //container.classList.remove('dragging');
       container.style.cursor = 'grab';
     };
 
@@ -170,6 +187,7 @@ const PdfViewer = ({
         width: '100%',
         height: '100%',
         overflow: 'hidden',
+        cursor: 'grab',
       }}
     />
   );
