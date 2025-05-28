@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/webpack.mjs';
-import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer.mjs';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import * as pdfjsViewer from 'pdfjs-dist/legacy/web/pdf_viewer';
 import 'pdfjs-dist/web/pdf_viewer.css';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 const PdfViewer = ({
   file,
