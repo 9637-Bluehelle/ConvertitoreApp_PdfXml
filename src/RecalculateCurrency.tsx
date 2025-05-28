@@ -99,8 +99,8 @@ async function convertToEuro(
 
   if (currentDate !== date) {
     fileMessages[fileName] = [
-      `Tasso di cambio non disponibile per la data ${date} (weekend o festivo),`,
-      `è stata utilizzata la data precedente ${currentDate}. `,
+      `Tasso di cambio non disponibile per la data ${date} `,
+      `(weekend o festivo),  è stata utilizzata la data precedente ${currentDate}. `,
       `1 ${divisa} = ${exchangeRate.toFixed(4)} EUR`,
     ];
   } else {
