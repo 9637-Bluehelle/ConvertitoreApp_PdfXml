@@ -52,14 +52,14 @@ async function convertToEuro(
   date: string,
   fileName: string,
 ): Promise<number> {
-  const fromCurrency = currency_mapping[divisa];
+  const fromCurrency = divisa;
 
-  if (!fromCurrency) {
-    alert(`Valuta ${divisa} non valida o non supportata. Controlla e riprova.`);
+  if (!currency_mapping[fromCurrency]) {
+    alert(`Valuta ${fromCurrency} non valida o non supportata. Controlla e riprova.`);
     return amount;
   }
 
-  if (divisa === "EUR") {
+  if (fromCurrency === "EUR") {
     return amount;
   }
 
