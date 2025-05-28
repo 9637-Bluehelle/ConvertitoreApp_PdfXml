@@ -1,7 +1,7 @@
 import React,{useState} from 'react';
-import { load }  from 'cheerio';
-import type { Element } from 'domhandler';
-import {addErrorLog} from './FirestoreDataLoader';
+//import { load }  from 'cheerio';
+//import type { Element } from 'domhandler';
+//import {addErrorLog} from './FirestoreDataLoader';
 
 const currency_mapping: { [key: string]: string } = {
         "EUR": "Euro","USD": "US Dollar","ARS": "Argentine Peso","AUD": "Australian Dollar","BHD": "Bahraini Dinar","BWP": "Botswana Pula",
@@ -19,6 +19,33 @@ const currency_mapping: { [key: string]: string } = {
 
 export const fileMessages: { [key: string]: string[] } = {}
 
+async function fetchRatesForDate(date: string) {
+  const url = `https://tassidicambio.bancaditalia.it/terzevalute-wf-web/rest/v1.0/dailyRates?referenceDate=${date}&currencyIsoCode=EUR&lang=it`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Errore fetch Banca d'Italia: ${response.status}`);
+  const text = await response.text();
+  return text;
+}
+
+function parseRatesCSV(csvText: string): { [key: string]: number } {
+  const lines = csvText.trim().split('\n');
+  // La prima linea è header
+  const rates: { [key: string]: number } = {};
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // Divido su virgola (attenzione a valori testuali con virgole? Qui sembra no)
+    const cols = line.split(',');
+    // Indici basati su esempio: Codice ISO = colonna 2, Quotazione = colonna 4
+    const codiceISO = cols[2];
+    const quotazioneStr = cols[4];
+    const quotazione = parseFloat(quotazioneStr);
+    if (!isNaN(quotazione)) {
+      rates[codiceISO] = quotazione;
+    }
+  }
+  return rates;
+}
+
 async function convertToEuro(
   amount: number,
   divisa: string,
@@ -29,53 +56,62 @@ async function convertToEuro(
 
   if (!fromCurrency) {
     alert(`Valuta ${divisa} non valida o non supportata. Controlla e riprova.`);
-    return amount 
+    return amount;
   }
 
   if (divisa === "EUR") {
-    return amount
+    return amount;
   }
 
-  try {
-    const url = `https://www.x-rates.com/historical/?from=EUR&amount=1&date=${date}`;
-    const response = await fetch(url);
-    
-    const html = await response.text();
-    const $ = load(html);
-    
-    const rates: { [key: string]: number } = { Euro: 1 };
-    
-    // la tabella con i tassi è la seconda tbody
-    const tableRows = $('tbody').eq(1).find('tr');
-    tableRows.each((_: unknown, row: Element) => {
-    const columns = $(row).find('td');
-      if (columns.length >= 2) {
-        const currencyName = $(columns[0]).text().trim();
-        const rate = $(columns[1]).text().trim();
-        rates[currencyName] = parseFloat(rate.replace(',', '.'));
+  let currentDate = date;
+  let csvText: string | null = null;
+  let rates: { [key: string]: number } | null = null;
+
+  for (let i = 0; i < 7; i++) { // max 7 giorni indietro
+    try {
+      csvText = await fetchRatesForDate(currentDate);
+      rates = parseRatesCSV(csvText);
+
+      if (rates && rates[fromCurrency]) {
+        break; // trovato il tasso per questa data (o precedente)
+      } else {
+        throw new Error(`Tasso di cambio per ${fromCurrency} non trovato per la data ${currentDate}`);
       }
-    });
-
-    if (!rates[fromCurrency]) {
-      throw new Error(`Tasso di cambio per ${fromCurrency} non trovato.`);
+    } catch (err) {
+      const dt = new Date(currentDate);
+      dt.setDate(dt.getDate() - 1);
+      currentDate = dt.toISOString().slice(0, 10);
+      if (i === 6) {
+        alert(`Impossibile recuperare il tasso di cambio per ${fromCurrency} nelle ultime 7 giornate.`);
+        throw err;
+      }
     }
+  }
 
-    let exchangeRate = 1 / rates[fromCurrency];
-    let result = amount * exchangeRate;
-    result = Math.floor(result * 100) / 100;
+  if (!rates || !rates[fromCurrency]) {
+    alert(`Tasso di cambio per ${fromCurrency} non trovato.`);
+    return amount;
+  }
 
+  const exchangeRate = 1 / rates[fromCurrency];
+  let result = amount * exchangeRate;
+  result = Math.floor(result * 100) / 100;
+
+  if (currentDate !== date) {
+    fileMessages[fileName] = [
+      `Tasso di cambio non disponibile per la data ${date},`,
+      `utilizzata la data precedente ${currentDate} (weekend o festivo).`,
+      `1 ${divisa} = ${exchangeRate.toFixed(4)} EUR`,
+    ];
+  } else {
     fileMessages[fileName] = [
       `Tasso di cambio in data`,
       ` ${date}: `,
-      ` 1 ${divisa} = ${exchangeRate.toFixed(4)} EUR `
+      ` 1 ${divisa} = ${exchangeRate.toFixed(4)} EUR `,
     ];
-
-    return result;
-  } catch (error) {
-    addErrorLog("Errore durante la conversione:", error);
-    alert(error);
-    throw error;
   }
+
+  return result;
 }
 
 
