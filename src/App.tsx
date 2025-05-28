@@ -173,45 +173,52 @@ const App = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files ? Array.from(event.target.files) : [];
     if (selected.length === 0) return;
-     
+
     setFiles([]);
     setFileURLs(new Map());
-
     setTotalFiles(selected.length);
     setIsProcessing(true);
-
-    const renamedFiles: File[] = [];
+    const statuses = new Map<string, boolean | undefined>();
     const newUrls = new Map<string, string>();
+    const processedFiles: File[] = [];
 
-    selected.forEach((file, index) => {
-      const newName = Rename(file.name, index);
+    const processSequentially = async () => {
+      for (let i = 0; i < selected.length; i++) {
+        const originalFile = selected[i];
+        const newName = Rename(originalFile.name, i);
+        const renamedFile = new File([originalFile], newName, { type: originalFile.type });
 
-      // Crea un nuovo File con lo stesso contenuto ma nome modificato
-      const renamedFile = new File([file], newName, { type: file.type });
-      renamedFiles.push(renamedFile);
+        const url = URL.createObjectURL(renamedFile);
+        newUrls.set(newName, url);
+        statuses.set(newName, undefined);
+        processedFiles.push(renamedFile); // accumula i file corretti
 
-      const url = URL.createObjectURL(renamedFile);
-      newUrls.set(newName, url);
-      setFileStatuses(prev => new Map(prev).set(newName, undefined));
-
-      // Processa il file con il nuovo nome
-      processFileAndUpdateState(renamedFile, anagraficaClienti).then(() => {
+        await processFileAndUpdateState(renamedFile, anagraficaClienti);
         if (processAppRef.current) {
           processAppRef.current.fileProcessed();
         }
-      });
-    });
+      }
 
-    setFileURLs(newUrls);
-    objectURLsRef.current = newUrls;
-    setSelectedFile(null);
-    setCurrentPage(1);
+      // aggiorna gli stati finali una sola volta
+      setFiles(processedFiles);
+      setFileURLs(newUrls);
+      setFileStatuses(statuses);
+      objectURLsRef.current = newUrls;
+      setSelectedFile(null);
+      setCurrentPage(1);
+    };
+
+    processSequentially().catch((error) => {
+      console.error("Errore durante il processamento sequenziale:", error);
+      setIsProcessing(false);
+    });
   };
 
   const handleFileClick = (file: File) => {
     setSelectedFile(file);
     setCurrentPage(1);
   };
+
 
   const closeProcessApp = () => {
     setIsProcessing(false);
