@@ -28,7 +28,8 @@ async function convertToEuro(
   const fromCurrency = currency_mapping[divisa];
 
   if (!fromCurrency) {
-    throw new Error(`Valuta ${divisa} non valida o non supportata. Controlla e riprova.`);
+    alert(`Valuta ${divisa} non valida o non supportata. Controlla e riprova.`);
+    return amount 
   }
 
   if (divisa === "EUR") {
