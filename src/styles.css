@@ -910,6 +910,7 @@ input[type="file"] {
   border: 0;
   border-radius: 6px ;
   user-select: none;
+  border-right: 1px solid #ccc;
 }
 
 .google-button:hover {
