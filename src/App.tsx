@@ -178,7 +178,6 @@ const App = () => {
     setFileURLs(new Map());
     setTotalFiles(selected.length);
     setIsProcessing(true);
-    const statuses = new Map<string, boolean | undefined>();
     const newUrls = new Map<string, string>();
     const processedFiles: File[] = [];
 
@@ -190,7 +189,6 @@ const App = () => {
 
         const url = URL.createObjectURL(renamedFile);
         newUrls.set(newName, url);
-        statuses.set(newName, undefined);
         processedFiles.push(renamedFile); // accumula i file corretti
 
         await processFileAndUpdateState(renamedFile, anagraficaClienti);
@@ -199,10 +197,8 @@ const App = () => {
         }
       }
 
-      // aggiorna gli stati finali una sola volta
       setFiles(processedFiles);
       setFileURLs(newUrls);
-      setFileStatuses(statuses);
       objectURLsRef.current = newUrls;
       setSelectedFile(null);
       setCurrentPage(1);
@@ -218,7 +214,6 @@ const App = () => {
     setSelectedFile(file);
     setCurrentPage(1);
   };
-
 
   const closeProcessApp = () => {
     setIsProcessing(false);
