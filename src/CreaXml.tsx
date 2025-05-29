@@ -27,12 +27,12 @@ interface DataPdf {
   ProgressivoInvio: string;
 }
 
-export const creaXmlFattura = (dataPdf: DataPdf, nameFile: string, folder: string) => {
+export const creaXmlFattura = (dataPdf: DataPdf, name: string, folder: string) => {
   try{
     const emptyKeys = Object.keys(dataPdf).filter((key) => (dataPdf as any)[key] === "");
-
+    const nameFile = name.slice(0, -4)
     if (emptyKeys.length) {
-      alert(`Alcuni dati nel file ${nameFile} sono mancanti!\nControlla e riprova il salvataggio.`);
+      alert(`Alcuni dati nel file ${name} sono mancanti!\nControlla e riprova il salvataggio.`);
       return;
     }
 
